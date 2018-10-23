@@ -36,7 +36,7 @@ const mediaMatches = (media, file) => {
     let val;
 
     // if its an episode it should match against a series/tvshow/episode
-    if (typeof file.episode === "number" && !isTvshow(media)) {
+    if ((typeof file.episode === "number" || typeof file.season === "number") && !isTvshow(media)) {
         return false;
     }
 
@@ -139,6 +139,12 @@ const parseFiles = async (directoryToParse) => {
         file.parsed = ptn(file.name);
 
         if (file.parsed.title.length < 1) {
+            helper.log("red", "Skipping " + file.name + " (ptn has failed parsing it)");
+            continue;
+        }
+
+        // if has season but not episode or the inverse thing, skip it, something is wrong
+        if ((typeof file.parsed.episode === "number" && typeof file.parsed.season !== "number") || (typeof file.parsed.episode !== "number" && typeof file.parsed.season === "number")) {
             helper.log("red", "Skipping " + file.name + " (ptn has failed parsing it)");
             continue;
         }
