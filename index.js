@@ -36,7 +36,9 @@ const mediaMatches = (media, file) => {
     let val;
 
     // if its an episode it should match against a series/tvshow/episode
-    if ((typeof file.episode === "number" || typeof file.season === "number") && !isTvshow(media)) {
+    if (((typeof file.episode === "number" || typeof file.season === "number") && !isTvshow(media)) ||
+        (isTvshow(media) && (typeof file.episode !== "number" || typeof file.season !== "number"))
+    ) {
         return false;
     }
 
