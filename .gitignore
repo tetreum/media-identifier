@@ -1,0 +1,4 @@
+node_modules
+.git
+conf.js
+medias.sqlite
