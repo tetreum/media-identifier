@@ -97,7 +97,7 @@ const parseFiles = async (directoryToParse) => {
         dbPath = path.join(conf.destinationDirectory, './medias.db');
 
     if (!fs.existsSync(dbPath)) {
-        fs.copyFileSync('../medias.db', dbPath);
+        fs.copyFileSync('./medias.db', dbPath);
     }
 
     const db = await sqlite.open(dbPath, { Promise });
