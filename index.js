@@ -173,10 +173,10 @@ const parseFiles = async (directoryToParse) => {
             }
 
             // try to set a readable folder name, on error set the existing one
-            folderName = media.name.replace(invalidPathRegex, '');
+            folderName = media.name.replace(invalidPathRegex, '').trim();
 
             if (isInvalidPath(folderName)) {
-                folderName = file.name.replace(invalidPathRegex, '');
+                folderName = file.name.replace(invalidPathRegex, '').trim();
             }
 
             // tvshow episodes share parent folder
@@ -242,6 +242,7 @@ const parseFiles = async (directoryToParse) => {
                     ':json' : JSON.stringify(media)
                 });
             } catch (e) {}
+            break;
         }
         if (!hasMatched) {
             helper.log("red", "Moving " + file.base + " (" + file.parsed.title + ") - To failed matches folder (" + search.results.length + ") " + JSON.stringify(search.results[0]));
