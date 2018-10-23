@@ -8,6 +8,7 @@ Matches your movies/tvshows files against Tviso API and downloads their metadata
 
 # Setup
 
+0. Change your torrent downloader behaviour to move the finished downloads to a separate folder. So `media-identifier` won't move/work with unfinished downloads
 1. `git clone https://github.com/tetreum/media-identifier.git` or download the zip
 2. `npm install`
 3. `mv conf.demo.js conf.js`
