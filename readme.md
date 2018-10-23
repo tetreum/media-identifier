@@ -2,6 +2,37 @@
 
 Matches your movies/tvshows files against Tviso API and downloads their metadata+images+places them in a human readable format.
 
+# Example
+
+Having the following structure:
+```bash
+c:\completed_downloads
+- The Walking Dead S05E03 720p HDTV x264-ASAP[ettv].mkv
+- Hercules (2014) 1080p BrRip H264 - YIFY.avi
+- Visit my website click here!!.url
+- D4wn.0f.th3.Pl4n3t.0f.th3.4p3s.2014.HDRip.XViD-EVO.mp4
+- SUPER IMPORTANT, README.txt
+```
+
+After running `media-identifier` will result in:
+
+```bash
+c:\completed_downloads
+c:\collection
+- media.db (sqlite db containing the list of all medias present in the folder)
+- \Walking Dead\media.json (tvshow metadata like, name, year, actors, etc..)
+- \Walking Dead\poster.jpg
+- \Walking Dead\backdrop.jpg
+- \Walking Dead\5\5x03.mkv
+- \Hercules\media.json (movie metadata like, name, year, actors, etc..)
+- \Hercules\poster.jpg
+- \Hercules\backdrop.jpg
+- \Hercules\Hercules.avi
+c:\failed_match
+- D4wn.0f.th3.Pl4n3t.0f.th3.4p3s.2014.HDRip.XViD-EVO.mp4
+```
+
+
 # Requirements
 1. node >= v8
 2. Tviso API app (https://developers.tviso.com/)
