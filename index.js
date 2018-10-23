@@ -79,7 +79,11 @@ const cleanFolder = (baseFolder) => {
          // avoid removing c:\\ or baseFolder itself
         if (path.parse(folder).name != path.parse(baseFolder).name && helper.getAllFiles(folder).length == 0 && folder.length > 5) {
             helper.log("blue", "Removing empty folder " + folder);
-            rimraf.sync(folder);
+            try {
+                rimraf.sync(folder);
+            } catch (e) {
+                helper.log("red", "Could not remove " + folder + " : " + e.message);
+            }
         }
     }
 }
@@ -111,12 +115,21 @@ const parseFiles = async (directoryToParse) => {
 
             // remove files to ignore
             helper.log("blue", "Removing " + file.base);
-            fs.unlinkSync(files[k]);
+            try {
+                fs.unlinkSync(files[k]);
+            } catch (e) {
+                helper.log("red", "Could not remove " + files[k] + " : " + e.message);
+            }
+
 
             // if folder is now empty, just delete it
             if (path.parse(file.dir).name != path.parse(directoryToParse).name && helper.getAllFiles(file.dir).length == 0 && file.dir.length > 5) { // avoid removing c:\\
                 helper.log("blue", "Removing empty folder " + file.dir);
-                rimraf.sync(file.dir);
+                try {
+                    rimraf.sync(file.dir);
+                } catch (e) {
+                    helper.log("red", "Could not remove " + file.dir + " : " + e.message);
+                }
             }
             continue;
         }
