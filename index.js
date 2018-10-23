@@ -90,6 +90,23 @@ const cleanFolder = (baseFolder) => {
     }
 }
 
+const moveToFailedDirectory = (filePath, file, directoryToParse, failedMatchDirectory, search) => {
+    let message = "Moving " + file.base + " (" + file.parsed.title + ") - To failed matches folder";
+
+    if (typeof search !== "undefined") {
+        message +=  " (" + search.results.length + ") " + JSON.stringify(search.results[0]);
+    } else {
+        message += " - Could not match against tviso";
+    }
+
+    helper.log("red",  message);
+
+    // dont move to failedMatchDirectory if it's already there
+    if (directoryToParse != failedMatchDirectory) {
+        fs.renameSync(filePath, path.join(failedMatchDirectory, file.base));
+    }
+}
+
 const parseFiles = async (directoryToParse) => {
     let files = helper.getAllFiles(directoryToParse),
         hasMatched,
@@ -145,6 +162,8 @@ const parseFiles = async (directoryToParse) => {
             continue;
         }
 
+        file.parsed.title = file.parsed.title.trim();
+
         // if has season but not episode or the inverse thing, skip it, something is wrong
         if ((typeof file.parsed.episode === "number" && typeof file.parsed.season !== "number") || (typeof file.parsed.episode !== "number" && typeof file.parsed.season === "number")) {
             helper.log("red", "Skipping " + file.name + " (ptn has failed parsing it)");
@@ -155,7 +174,7 @@ const parseFiles = async (directoryToParse) => {
         search = await tviso.search(file.parsed.title);
 
         if (search.results.length < 1) {
-            helper.log("red", "Skipping " + file.name + " (" + file.parsed.title + ") - Could not match against tviso");
+            moveToFailedDirectory(files[k], file, directoryToParse, conf.failedMatchDirectory);
             continue;
         }
 
@@ -253,12 +272,8 @@ const parseFiles = async (directoryToParse) => {
             break;
         }
         if (!hasMatched) {
-            helper.log("red", "Moving " + file.base + " (" + file.parsed.title + ") - To failed matches folder (" + search.results.length + ") " + JSON.stringify(search.results[0]));
-
-            // dont move to failedMatchDirectory if it's already there
-            if (directoryToParse != conf.failedMatchDirectory) {
-                fs.renameSync(files[k], path.join(conf.failedMatchDirectory, file.base));
-            }
+            moveToFailedDirectory(files[k], file, directoryToParse, conf.failedMatchDirectory, search);
+            continue;
         }
     }
 }
@@ -268,6 +283,7 @@ const server = http.createServer(async (req, res) => {
 
   switch (req.url.substr(1)) {
       case "retry-invalids":
+      case "retry":
         reply(res, "working on that");
         await parseFiles(conf.failedMatchDirectory);
       break;
@@ -277,6 +293,9 @@ const server = http.createServer(async (req, res) => {
         await cleanFolder(conf.directoryToParse);
       break;
   }
+});
+server.on('clientError', function(err, socket) {
+  socket.destroy();
 });
 server.listen(conf.port, '127.0.0.1', () => {
   console.log(`Media identifier started on http://localhost:${conf.port}`);

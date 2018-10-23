@@ -111,6 +111,10 @@ class Tviso {
                     request.write(paramList);
                 }
 
+                request.on('error', (e) => {
+                  console.log("Tviso API error: " + e.message);
+                });
+
                 request.end();
             }
 
