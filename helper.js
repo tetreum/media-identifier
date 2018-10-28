@@ -16,22 +16,19 @@ const getAllFiles = dir =>
     return isDirectory ? [...files, ...getAllFiles(name)] : [...files, name];
   }, []);
 
-const getAllFolders = dir => {
-    let $res = fs.readdirSync(dir).reduce((files, file) => {
-        const name = path.join(dir, file);
-        const isDirectory = fs.statSync(name).isDirectory();
+  const getAllFolders = dir => {
+    let folders = [];
+    fs.readdirSync(dir).forEach((file) => {
+      const name = path.join(dir, file);
+      const isDirectory = fs.statSync(name).isDirectory();
 
-        if (isDirectory) {
-            if (typeof files === "undefined") {
-                return [name, ...getAllFolders(name)];
-            } else {
-                return [...files, name, ...getAllFolders(name)]
-            }
-        }
-    }, []);
-
-    return $res;
-}
+      if (!isDirectory) {
+        return;
+      }
+      folders.push(name, ...getAllFolders(name));
+    });
+      return folders;
+  }
 
  const downloadFile = (url, destination) => {
     return new Promise((resolve, reject) => {
