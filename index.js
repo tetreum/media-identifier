@@ -48,6 +48,14 @@ const mediaMatches = (media, file) => {
 
         switch (attr) {
             case "title":
+                // Movies like Die Hard: With a Vengeance have invalid chars in their name
+                // As our files cant have them we also remove them from tviso data or it wont match. Ex:
+                // file:  Die Hard With a Vengeance.avi => Die Hard With a Vengeance
+                // tviso: Die Hard: With a Vengeance
+                // This will result in a failed match because of the :
+                media.name = media.name.replace(invalidPathRegex, '').trim();
+                media.originalName = media.originalName.replace(invalidPathRegex, '').trim();
+
                 if (media.name.toLowerCase() === val.toLowerCase() || slug(media.name, {lower: true}) === slug(val, {lower: true})) {
                     return true;
                 }
