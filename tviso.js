@@ -39,6 +39,19 @@ class Tviso {
         }, this.METHOD_POST);
     }
 
+    getMedia (idm, mediaType, fullInfo) {
+        if (typeof fullInfo === "undefined" || fullInfo == null || fullInfo == false) {
+            fullInfo = "basic";
+        } else {
+            fullInfo = "full";
+        }
+
+        return this.query("media/" + fullInfo + "_info", {
+            'idm': idm,
+            'mediaType': mediaType,
+        }, this.METHOD_GET);
+    }
+
     search (q, mediaType) {
         let filters = {
             'q': q

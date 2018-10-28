@@ -120,6 +120,8 @@ const parseFiles = async (directoryToParse) => {
     let files = helper.getAllFiles(directoryToParse),
         hasMatched,
         file,
+        isForcedMatch,
+        matchRes,
         media,
         search,
         folderName,
@@ -136,6 +138,7 @@ const parseFiles = async (directoryToParse) => {
 
     for(let k in files) {
         file = path.parse(files[k]);
+        isForcedMatch = false;
 
         // ignore non video extensions
         if (conf.extensionsToIgnore.indexOf(file.ext.substr(1)) !== -1) {
@@ -164,27 +167,50 @@ const parseFiles = async (directoryToParse) => {
 
         helper.log("normal", "Parsing " + file.base);
 
-        file.parsed = ptn(file.name);
+        // detect forced matches aka 2-2622.avi => Die Hard
+        if (file.name.substr(1, 1) == "-" && (matchRes = file.base.match(/([1-4]{1})\-([0-9]{1,20})\./i))) {
+            helper.log("normal", "Forced match detected");
+            isForcedMatch = true;
 
-        if (file.parsed.title.length < 1) {
-            helper.log("red", "Skipping " + file.name + " (ptn has failed parsing it)");
-            continue;
-        }
+            if (parseInt(matchRes[1]) != 2) {
+              helper.log("red", "Forced match is only available for movies");
+              pd("-exit-");
+            }
 
-        file.parsed.title = file.parsed.title.trim();
+            // replicate search output to not change the incoming code
+            search = {
+              results: [
+                await tviso.getMedia(parseInt(matchRes[2]), parseInt(matchRes[1]))
+              ]
+            };
 
-        // if has season but not episode or the inverse thing, skip it, something is wrong
-        if ((typeof file.parsed.episode === "number" && typeof file.parsed.season !== "number") || (typeof file.parsed.episode !== "number" && typeof file.parsed.season === "number")) {
-            helper.log("red", "Skipping " + file.name + " (ptn has failed parsing it)");
-            continue;
-        }
+            file.parsed = {
+              title: search.results[0].name
+            };
+        } else {
+            file.parsed = ptn(file.name);
+            isForcedMatch = false;
 
-        helper.log("normal", "Matching against Tviso " + file.parsed.title);
-        search = await tviso.search(file.parsed.title);
+            if (file.parsed.title.length < 1) {
+                helper.log("red", "Skipping " + file.name + " (ptn has failed parsing it)");
+                continue;
+            }
 
-        if (search.results.length < 1) {
-            moveToFailedDirectory(files[k], file, directoryToParse, conf.failedMatchDirectory);
-            continue;
+            file.parsed.title = file.parsed.title.trim();
+
+            // if has season but not episode or the inverse thing, skip it, something is wrong
+            if ((typeof file.parsed.episode === "number" && typeof file.parsed.season !== "number") || (typeof file.parsed.episode !== "number" && typeof file.parsed.season === "number")) {
+                helper.log("red", "Skipping " + file.name + " (ptn has failed parsing it)");
+                continue;
+            }
+
+            helper.log("normal", "Matching against Tviso " + file.parsed.title);
+            search = await tviso.search(file.parsed.title);
+
+            if (search.results.length < 1) {
+                moveToFailedDirectory(files[k], file, directoryToParse, conf.failedMatchDirectory);
+                continue;
+            }
         }
 
         hasMatched = false;
@@ -192,7 +218,7 @@ const parseFiles = async (directoryToParse) => {
         for(let i in search.results) {
             media = search.results[i]
 
-            if (!mediaMatches(media, file.parsed)) {
+            if (!isForcedMatch && !mediaMatches(media, file.parsed)) {
                 continue;
             }
 
