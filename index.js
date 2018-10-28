@@ -306,6 +306,7 @@ const server = http.createServer(async (req, res) => {
       case "retry":
         reply(res, "working on that");
         await parseFiles(conf.failedMatchDirectory);
+        await cleanFolder(conf.failedMatchDirectory);
       break;
       case "parse":
         reply(res, "working on that");
