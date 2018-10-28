@@ -6,6 +6,7 @@ const isInvalidPath = require('is-invalid-path');
 const fs = require('fs');
 const slug = require('slug');
 const rimraf = require('rimraf');
+const Url = require('url');
 require('perfect-print-js')
 
 const helper = require('./helper');
@@ -278,10 +279,29 @@ const parseFiles = async (directoryToParse) => {
     }
 }
 
+const replaceWord = (directoryToParse, word, replacement) => {
+    let files = helper.getAllFiles(directoryToParse),
+        finalPath;
+
+    for(let k in files) {
+        file = path.parse(files[k]);
+
+        if (file.name.indexOf(word) === -1) {
+            continue;
+        }
+        file.base = file.base.replace(word, replacement);
+
+        fs.renameSync(files[k], path.join(file.dir, file.base));
+
+        helper.log("green", "Renamed " + file.name + " to " + file.base);
+    }
+}
+
 const server = http.createServer(async (req, res) => {
   res.statusCode = 200;
+  let parsedUrl = Url.parse(req.url, true);
 
-  switch (req.url.substr(1)) {
+  switch (parsedUrl.pathname.substr(1)) {
       case "retry-invalids":
       case "retry":
         reply(res, "working on that");
@@ -291,6 +311,22 @@ const server = http.createServer(async (req, res) => {
         reply(res, "working on that");
         await parseFiles(conf.directoryToParse);
         await cleanFolder(conf.directoryToParse);
+      break;
+      case "replace":
+        if (typeof parsedUrl.query.word === "undefined" || parsedUrl.query.word.length < 1) {
+            return reply(res, "invalid word param");
+        }
+        if (typeof parsedUrl.query.replacement === "undefined") {
+            return reply(res, "invalid word param");
+        }
+
+        if (typeof parsedUrl.query.replacement === "undefined" || parsedUrl.query.replacement.length < 1) {
+            parsedUrl.query.replacement = "";
+        }
+
+        reply(res, "working on that");
+
+        await replaceWord(conf.failedMatchDirectory, parsedUrl.query.word, parsedUrl.query.replacement);
       break;
   }
 });

@@ -52,3 +52,10 @@ To parse your downloads, head to `http://localhost:3000/parse`.
 - Matched content will be moved to the folder you set on `conf.js`
 - If it fails to match any content, it will be moved to a different folder, so you can rename the file for better matching & it's not checked on each `/parse` call
 - To retry failed matches folder just call `http://localhost:3000/retry-invalids`
+
+
+# Methods
+
+- `/parse`: Processes completed downloads
+- `/retry`: Reprocesses failed matches
+- `/replace`: Replaces a `word` with the given `replacement` over all file names in failed matches directory (so you can faster remove domains and other junk from their name)
