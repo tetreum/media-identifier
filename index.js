@@ -34,7 +34,7 @@ const reply = (res, rep) => {
 }
 
 const mediaMatches = (media, file) => {
-    let val;
+    let val, mediaName, mediaOriginalName;
 
     // if its an episode it should match against a series/tvshow/episode
     if (((typeof file.episode === "number" || typeof file.season === "number") && !isTvshow(media)) ||
@@ -53,13 +53,13 @@ const mediaMatches = (media, file) => {
                 // file:  Die Hard With a Vengeance.avi => Die Hard With a Vengeance
                 // tviso: Die Hard: With a Vengeance
                 // This will result in a failed match because of the :
-                media.name = media.name.replace(invalidPathRegex, '').trim();
-                media.originalName = media.originalName.replace(invalidPathRegex, '').trim();
+                mediaName = media.name.replace(invalidPathRegex, '').trim();
+                mediaOriginalName = media.originalName.replace(invalidPathRegex, '').trim();
 
-                if (media.name.toLowerCase() === val.toLowerCase() || slug(media.name, {lower: true}) === slug(val, {lower: true})) {
+                if (mediaName.toLowerCase() === val.toLowerCase() || slug(mediaName, {lower: true}) === slug(val, {lower: true})) {
                     return true;
                 }
-                if (media.originalName.toLowerCase() === val.toLowerCase() || slug(media.originalName, {lower: true}) === slug(val, {lower: true})) {
+                if (mediaOriginalName.toLowerCase() === val.toLowerCase() || slug(mediaOriginalName, {lower: true}) === slug(val, {lower: true})) {
                     return true;
                 }
                 break;
