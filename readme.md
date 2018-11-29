@@ -52,6 +52,7 @@ To parse your downloads, head to `http://localhost:3000/parse`.
 - Matched content will be moved to the folder you set on `conf.js`
 - If it fails to match any content, it will be moved to a different folder, so you can rename the file for better matching & it's not checked on each `/parse` call
 - To retry failed matches folder just call `http://localhost:3000/retry-invalids`
+- To force a match, rename the file to its media `mediaType-idm`. Example: 2-2622.avi => Die Hard
 
 
 # Methods
