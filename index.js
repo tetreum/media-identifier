@@ -207,7 +207,7 @@ const parseFiles = async (directoryToParse) => {
             helper.log("normal", "Matching against Tviso " + file.parsed.title);
             search = await tviso.search(file.parsed.title);
 
-            if (search.results.length < 1) {
+            if (search.error > 0 || search.results.length < 1) {
                 moveToFailedDirectory(files[k], file, directoryToParse, conf.failedMatchDirectory);
                 continue;
             }
