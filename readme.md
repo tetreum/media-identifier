@@ -1,3 +1,5 @@
+![Preview](https://raw.githubusercontent.com/tetreum/media-identifier/master/preview/preview.gif)
+
 # Media identifier
 
 Matches your movies/tvshows files against Tviso API and downloads their metadata+images+places them in a human readable format.

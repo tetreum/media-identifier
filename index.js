@@ -15,7 +15,8 @@ chokidar.watch(conf.directoryToParse, {
 	awaitWriteFinish: true,
 	ignoreInitial: true
 }).on('add', async (path) => {
-  await mediaIdentifier.parseFiles(conf.directoryToParse, [path]);
+    console.log("New file detected " + path);
+    await mediaIdentifier.parseFiles(conf.directoryToParse, [path]);
 }).on('ready', () => {
   console.log("Listening to " + conf.directoryToParse + " directory changes");
 });
