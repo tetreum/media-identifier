@@ -1,0 +1,85 @@
+<html>
+	<title>Media identifier</title>
+	<body>
+		<h2>Media identifier</h2>
+		<h3>Failed matches</h3>
+		<ul id="failed-matches">
+		</ul>
+
+		<h3>Log</h3>
+		<div id="output-log">
+
+		</div>
+		<style>
+			body {
+				background: black;
+				color: white;
+				font-family: Verdana;
+			}
+			#failed-matches li {
+			    margin-bottom: 5px;
+			}
+			#failed-matches input {
+				width: 50%;
+				padding: 5px;
+			}
+			#output-log {
+			    border: 1px solid grey;
+				padding: 5px;
+			}
+			#output-log span {
+			    display: block;
+			}
+		</style>
+		<script>
+			const query = (url, cb, method = "GET", params = {}) => {
+				let xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						cb(this);
+					}
+				};
+				xmlhttp.open(method, url);
+
+				if (method == "POST") {
+					xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+					if (Object.keys(params).length > 0) {
+						let data = new FormData();
+
+						for (let k in params) {
+							data.append(k, params[k]);
+						}
+						return xmlhttp.send(data);
+					}
+				}
+				xmlhttp.send();
+			}
+
+			const renameFile = (oldName) => {
+				const newName = document.querySelector("[data-file=\"" + oldName + "\"] input").value;
+
+				query('/rename', (response) => {
+					updateLog();
+					updateFails();
+				}, 'POST', {
+					newName,
+					oldName,
+				});
+			}
+			const updateLog = () => {
+				query('/log', (response) => {
+					document.querySelector('#output-log').innerHTML = response.responseText;
+				});
+			}
+			const updateFails = () => {
+				query('/failed-matches', (response) => {
+					document.querySelector('#failed-matches').innerHTML = response.responseText;
+				});
+			}
+			setInterval(updateLog, 1000 * 5);
+			updateLog();
+			updateFails();
+		</script>
+	</body>
+</html>

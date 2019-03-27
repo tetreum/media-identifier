@@ -1,7 +1,10 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const https = require('https');
 const clc = require("cli-color");
+
+let logStream = null;
 
 /**
  * Find all files inside a dir, recursively.
@@ -40,7 +43,16 @@ const getAllFiles = dir =>
     });
  };
 
+ const getLogPath = () => {
+	return path.join(os.tmpdir() , "media_identifier_output.log");
+}
+
  const log = (color, message) => {
+
+	 if (logStream === null) {
+		logStream = fs.createWriteStream(getLogPath(), {flags:'a'});
+	 }
+
      let d = new Date();
 
      message = "[" + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + " " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds() + "] " + message;
@@ -52,10 +64,13 @@ const getAllFiles = dir =>
         message = clc[color](message);
      }
      console.log(message);
+	 logStream.write(message + os.EOL);
+	 // stream.end();
  }
 
 module.exports = {
     log,
+	getLogPath,
     getAllFiles,
     getAllFolders,
     downloadFile

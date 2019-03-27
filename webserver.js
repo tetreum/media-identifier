@@ -1,11 +1,24 @@
+const fs = require('fs');
 const http = require('http');
+const path = require('path');
 const Url = require('url');
+const AnsiConverter = require('ansi-to-html');
 
 const conf = require('./conf');
+const helper = require('./helper');
 const mediaIdentifier = require('./media-identifier');
+const Template = require('./template');
 
-const reply = (res, rep) => {
-    switch (typeof rep) {
+const reply = (res, rep, type = null) => {
+	if (type === null) {
+		type = typeof rep;
+	}
+    switch (type) {
+		case "html":
+		case "htm":
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            res.end(rep);
+            break;
         case "object":
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify(rep));
@@ -18,18 +31,29 @@ const reply = (res, rep) => {
     }
 }
 
-const renderHome = (res) => {
-	let html;
-/*
-	html = "<html><h2>Media identifier</h2>" +
-	<ul>
-		<li><a href="/failed">Failed matches</a></li>
-		<li><a href="/log">Log</a></li>
-	</ul>
-	"</html>";*/
+const renderHome = async (res) => {
+	reply(res, Template.render("home"), "html");
+}
 
-	res.setHeader('Content-Type', 'text/html; charset=utf-8');
-	res.end(html);
+const renderLog = (res) => {
+	const logFile = helper.getLogPath();
+	let text = "";
+
+	if (fs.existsSync(logFile)) {
+		text = fs.readFileSync(logFile, "utf8");
+	}
+
+	reply(res, (new AnsiConverter()).toHtml(text), "html");
+}
+
+const renderFailedMatches = async (res) => {
+	let files = helper.getAllFiles(conf.failedMatchDirectory);
+	let html = "";
+
+	for(let k in files) {
+		html += Template.render("failedMatch", path.parse(files[k]));
+	}
+	reply(res, html, "html");
 }
 
 const start = () => {
@@ -39,7 +63,17 @@ const start = () => {
 
 	  switch (parsedUrl.pathname.substr(1)) {
 		  case "":
-		  	renderHome(res);
+		  	await renderHome(res);
+		  break;
+		  case "rename":
+		  	//fs.renameSync(files[k], path.join(folderPath, fileName));
+	        reply(res, "working on that");
+	      break;
+		  case "log":
+		  	renderLog(res);
+		  break;
+		  case "failed-matches":
+		  	renderFailedMatches(res);
 		  break;
 	      case "retry-invalids":
 	      case "retry":
