@@ -43,6 +43,10 @@ const getAllFiles = dir =>
     });
  };
 
+ const removeInvalidPathCharacters = (str) => {
+	 return str.replace(/[<>:"/\\|?*]/ig, '').trim();
+ }
+
  const getLogPath = () => {
 	return path.join(os.tmpdir() , "media_identifier_output.log");
 }
@@ -73,5 +77,6 @@ module.exports = {
 	getLogPath,
     getAllFiles,
     getAllFolders,
+	removeInvalidPathCharacters,
     downloadFile
 }

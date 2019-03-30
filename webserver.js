@@ -3,6 +3,7 @@ const http = require('http');
 const path = require('path');
 const Url = require('url');
 const AnsiConverter = require('ansi-to-html');
+const isInvalidPath = require('is-invalid-path');
 
 const conf = require('./conf');
 const helper = require('./helper');
@@ -56,6 +57,31 @@ const renderFailedMatches = async (res) => {
 	reply(res, html, "html");
 }
 
+const renameFile = (newName, oldName) => {
+	helper.log("blue", "Order to rename " + oldName + " with " + newName + " received");
+	newName = helper.removeInvalidPathCharacters(newName);
+	let files = helper.getAllFiles(conf.failedMatchDirectory);
+
+	for(let k in files) {
+		if (files[k].indexOf(oldName)) {
+			let oldPath = files[k];
+			let newPath = files[k].replace(oldName, newName);
+
+			if (isInvalidPath(newPath)) {
+				helper.log("red", "Error, new path is not valid (" + newPath + ")");
+				return false;
+			}
+
+			fs.renameSync(oldPath, newPath);
+
+			helper.log("green", "Renaming done");
+			return newPath;
+		}
+	}
+	helper.log("red", "Renaming failed, file not found");
+	return false;
+}
+
 const start = () => {
 	const server = http.createServer(async (req, res) => {
 	  res.statusCode = 200;
@@ -66,7 +92,12 @@ const start = () => {
 		  	await renderHome(res);
 		  break;
 		  case "rename":
-		  	//fs.renameSync(files[k], path.join(folderPath, fileName));
+		  	let newPath = renameFile(parsedUrl.query.newName, parsedUrl.query.oldName);
+
+			if (newPath != false) {
+				await mediaIdentifier.parseFiles(conf.failedMatchDirectory, [newPath]);
+			}
+
 	        reply(res, "working on that");
 	      break;
 		  case "log":

@@ -32,6 +32,14 @@
 			}
 		</style>
 		<script>
+			const formatParams = ( params ) => {
+			  return "?" + Object
+			        .keys(params)
+			        .map(function(key){
+			          return key+"="+encodeURIComponent(params[key])
+			        })
+			        .join("&")
+			}
 			const query = (url, cb, method = "GET", params = {}) => {
 				let xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
@@ -39,7 +47,7 @@
 						cb(this);
 					}
 				};
-				xmlhttp.open(method, url);
+				xmlhttp.open(method, url + formatParams(params));
 
 				if (method == "POST") {
 					xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
@@ -59,10 +67,14 @@
 			const renameFile = (oldName) => {
 				const newName = document.querySelector("[data-file=\"" + oldName + "\"] input").value;
 
+				if (newName === oldName || newName.length < 1) {
+					return;
+				}
+
 				query('/rename', (response) => {
 					updateLog();
 					updateFails();
-				}, 'POST', {
+				}, 'GET', {
 					newName,
 					oldName,
 				});

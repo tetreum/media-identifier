@@ -11,7 +11,6 @@ const helper = require('./helper');
 const Tviso = require('./tviso');
 const conf = require('./conf');
 const tviso = new Tviso(conf.tviso.app, conf.tviso.secret);
-const invalidPathRegex = /[<>:"/\\|?*]/ig;
 
 const mediaMatches = (media, file) => {
     let val, mediaName, mediaOriginalName;
@@ -33,8 +32,8 @@ const mediaMatches = (media, file) => {
                 // file:  Die Hard With a Vengeance.avi => Die Hard With a Vengeance
                 // tviso: Die Hard: With a Vengeance
                 // This will result in a failed match because of the :
-                mediaName = media.name.replace(invalidPathRegex, '').trim();
-                mediaOriginalName = media.originalName.replace(invalidPathRegex, '').trim();
+                mediaName = helper.removeInvalidPathCharacters(media.name);
+                mediaOriginalName = helper.removeInvalidPathCharacters(media.originalName);
 
                 if (mediaName.toLowerCase() === val.toLowerCase() || slug(mediaName, {lower: true}) === slug(val, {lower: true})) {
                     return true;
@@ -115,6 +114,9 @@ const parseFiles = async (directoryToParse, files = []) => {
         media,
         search,
         folderName,
+		mediaTypeFolder,
+		seriesFolder = path.join(conf.destinationDirectory, "series"),
+		moviesFolder = path.join(conf.destinationDirectory, "movies"),
         fileName,
         folderPath,
         query,
@@ -124,6 +126,13 @@ const parseFiles = async (directoryToParse, files = []) => {
 		helper.log("blue", "media.db not found, creating");
         fs.copyFileSync('./medias.db', dbPath);
     }
+
+	if (!fs.existsSync(seriesFolder)) {
+		fs.mkdirSync(seriesFolder);
+	}
+	if (!fs.existsSync(moviesFolder)) {
+		fs.mkdirSync(moviesFolder);
+	}
 
     const db = await sqlite.open(dbPath, { Promise });
 
@@ -226,10 +235,10 @@ const parseFiles = async (directoryToParse, files = []) => {
             }
 
             // try to set a readable folder name, on error set the existing one
-            folderName = media.name.replace(invalidPathRegex, '').trim();
+            folderName = helper.removeInvalidPathCharacters(media.name);
 
             if (isInvalidPath(folderName)) {
-                folderName = file.name.replace(invalidPathRegex, '').trim();
+                folderName = helper.removeInvalidPathCharacters(file.name);
             }
 
             // tvshow episodes share parent folder
@@ -239,8 +248,10 @@ const parseFiles = async (directoryToParse, files = []) => {
 
             if (isTvshow(media)) {
                 fileName = file.parsed.season + "x" + file.parsed.episode; // 1x01
+				mediaTypeFolder = "series";
             } else {
                 fileName = folderName;
+				mediaTypeFolder = "movies";
             }
             fileName += file.ext;
 
@@ -254,7 +265,7 @@ const parseFiles = async (directoryToParse, files = []) => {
                 // @ToDo scan folder looking for media related files
             }
 
-            folderPath = path.join(conf.destinationDirectory, folderName);
+            folderPath = path.join(conf.destinationDirectory, mediaTypeFolder, folderName);
 
             // folderPath may exists for tvshows, there is no need to redownload episode's parent media
             if (!fs.existsSync(folderPath)) {
