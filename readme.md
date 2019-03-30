@@ -1,5 +1,8 @@
 ![Preview](https://raw.githubusercontent.com/tetreum/media-identifier/master/preview/preview.gif)
 
+Small panel to fix failed matches/watch the logs:
+![Preview](https://raw.githubusercontent.com/tetreum/media-identifier/master/preview/panel.png)
+
 # Media identifier
 
 Matches your movies/tvshows files against Tviso API and downloads their metadata+images+places them in a human readable format (plex like division between movies and series).
