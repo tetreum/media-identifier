@@ -41,13 +41,19 @@
 			        .join("&")
 			}
 			const query = (url, cb, method = "GET", params = {}) => {
+				let baseUrl = location.href;
 				let xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						cb(this);
 					}
 				};
-				xmlhttp.open(method, url + formatParams(params));
+
+				// avoid duplicated "//"
+				if (baseUrl[baseUrl.length - 1] === "/") {
+					baseUrl = baseUrl.slice(0, -1);
+				}
+				xmlhttp.open(method, baseUrl + url + formatParams(params));
 
 				if (method == "POST") {
 					xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');

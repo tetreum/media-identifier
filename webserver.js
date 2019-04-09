@@ -63,7 +63,7 @@ const renameFile = (newName, oldName) => {
 	let files = helper.getAllFiles(conf.failedMatchDirectory);
 
 	for(let k in files) {
-		if (files[k].indexOf(oldName)) {
+		if (files[k].indexOf(oldName) !== -1) {
 			let oldPath = files[k];
 			let newPath = files[k].replace(oldName, newName);
 

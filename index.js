@@ -12,7 +12,9 @@ webserver.start();
 
 chokidar.watch(conf.directoryToParse, {
 	ignored: /(^|[\/\\])\../,
-	awaitWriteFinish: true,
+	awaitWriteFinish: {
+      stabilityThreshold: 1000 * 60 * 5
+    },
 	ignoreInitial: true
 }).on('add', async (path) => {
     console.log("New file detected " + path);
