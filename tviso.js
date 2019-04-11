@@ -11,9 +11,9 @@ class Tviso {
         this.BASE_URL = 'api.tviso.com';
     }
 
-    getAuthToken () {
+    getAuthToken (force = false) {
         return new Promise((resolve, reject) => {
-            if (typeof this.authToken === "undefined") {
+            if (typeof this.authToken === "undefined" || force) {
                 this.query("auth_token", {
                     'id_api': this.id,
                     'secret': this.secret,
@@ -113,8 +113,16 @@ class Tviso {
                     });
                     res.on('end', () => {
                         try {
-                            resolve(JSON.parse(response));
+							response = JSON.parse(response);
+
+							// invalid authToken
+							if (response.error === 1) {
+								this.getAuthToken(true).then(makeQuery);
+							} else {
+								resolve(response);
+							}
                         } catch (e) {
+							console.error("Tviso request error", e.message);
                             reject(response);
                         }
                     });
