@@ -11,6 +11,7 @@
     "is-invalid-path": "^1.0.2",
     "parse-torrent-name": "git+https://git@github.com/tetreum/parse-torrent-name.git",
     "perfect-print-js": "0.0.1",
+    "read-last-lines": "^1.7.1",
     "rimraf": "^2.6.2",
     "slug": "^1.0.0",
     "sqlite": "^3.0.0"

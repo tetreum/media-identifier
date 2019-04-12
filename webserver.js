@@ -4,6 +4,7 @@ const path = require('path');
 const Url = require('url');
 const AnsiConverter = require('ansi-to-html');
 const isInvalidPath = require('is-invalid-path');
+const readLastLines = require('read-last-lines');
 
 const conf = require('./conf');
 const helper = require('./helper');
@@ -36,12 +37,12 @@ const renderHome = async (res) => {
 	reply(res, Template.render("home"), "html");
 }
 
-const renderLog = (res) => {
+const renderLog = async (res) => {
 	const logFile = helper.getLogPath();
 	let text = "";
 
 	if (fs.existsSync(logFile)) {
-		text = fs.readFileSync(logFile, "utf8");
+		text = await readLastLines.read(logFile, 50);
 	}
 
 	reply(res, (new AnsiConverter()).toHtml(text), "html");

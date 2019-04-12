@@ -2,14 +2,13 @@
 	<title>Media identifier</title>
 	<body>
 		<h2>Media identifier</h2>
-		<h3>Failed matches</h3>
-		<ul id="failed-matches">
-		</ul>
-
 		<h3>Log</h3>
 		<div id="output-log">
 
 		</div>
+		<h3>Failed matches</h3>
+		<ul id="failed-matches">
+		</ul>
 		<style>
 			body {
 				background: black;
@@ -26,6 +25,11 @@
 			#output-log {
 			    border: 1px solid grey;
 				padding: 5px;
+				height: 300px;
+				overflow: auto;
+				overflow-x: hidden;
+				display: flex;
+				flex-direction: column-reverse;
 			}
 			#output-log span {
 			    display: block;

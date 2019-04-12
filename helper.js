@@ -54,7 +54,7 @@ const getAllFiles = dir =>
  const log = (color, message) => {
 
 	 if (logStream === null) {
-		logStream = fs.createWriteStream(getLogPath(), {flags:'a'});
+		logStream = fs.createWriteStream(getLogPath(), {flags: 'w'});
 	 }
 
      let d = new Date();
