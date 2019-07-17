@@ -34,6 +34,37 @@
 			#output-log span {
 			    display: block;
 			}
+			button {
+			  position: relative;
+			  vertical-align: top;
+			  padding: 5px;
+			  font-size: 22px;
+			  color: white;
+			  text-align: center;
+			  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+			  background: #bdc3c7;
+			  border-bottom: 2px solid #acb2b7;
+			  border: 0;
+			  cursor: pointer;
+			  -webkit-box-shadow: inset 0 -2px #acb2b7;
+			  box-shadow: inset 0 -2px #acb2b7;
+			}
+			button:hover {
+				background: #acb2b7;
+				box-shadow: inset 0 -2px grey;
+			}
+			button.red {
+				background: #e74c3c;
+				box-shadow: inset 0 -2px #db4334;
+				-webkit-box-shadow: inset 0 -2px #db4334;
+				border-bottom: 2px solid #db4334;
+			}
+			button.red:hover {
+				background: #db4334;
+				box-shadow: inset 0 -2px #d44132;
+				-webkit-box-shadow: inset 0 -2px #d44132;
+				border-bottom: 2px solid #d44132;
+			}
 		</style>
 		<script>
 			const formatParams = ( params ) => {
@@ -72,6 +103,19 @@
 					}
 				}
 				xmlhttp.send();
+			}
+
+			const deleteFile = (name) => {
+				let confirms = confirm("Wanna delete " + name + "?")
+
+				if (confirms) {
+					query('/delete', (response) => {
+						updateLog();
+						updateFails();
+					}, 'POST', {
+						name,
+					});
+				}
 			}
 
 			const renameFile = (oldName) => {

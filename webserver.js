@@ -58,6 +58,19 @@ const renderFailedMatches = async (res) => {
 	reply(res, html, "html");
 }
 
+const deleteFile = (name) => {
+	helper.log("blue", "Order to delete " + name + " received");
+
+	const fullPath = path.join(conf.failedMatchDirectory, name);
+
+	try {
+		fs.unlinkSync(fullPath);
+		helper.log("green", name + " deleted");
+	} catch (e) {
+		helper.log("red", "Failed to delete " + fullPath + " received (" + e.message + ")");
+	}
+}
+
 const renameFile = (newName, oldName) => {
 	helper.log("blue", "Order to rename " + oldName + " with " + newName + " received");
 	newName = helper.removeInvalidPathCharacters(newName);
@@ -91,6 +104,11 @@ const start = () => {
 	  switch (parsedUrl.pathname.substr(1)) {
 		  case "":
 		  	await renderHome(res);
+		  break;
+		  case "delete":
+		  	deleteFile(parsedUrl.query.name);
+
+			reply(res, "deleted");
 		  break;
 		  case "rename":
 		  	let newPath = renameFile(parsedUrl.query.newName, parsedUrl.query.oldName);
