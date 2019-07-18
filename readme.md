@@ -42,6 +42,7 @@ c:\failed_match
 # Requirements
 1. node >= v8
 2. TheMovieDB API app (https://www.themoviedb.org/settings/api/new)
+3. Windows? (not tested on linux)
 
 # Setup
 
