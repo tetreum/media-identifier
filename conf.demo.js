@@ -1,8 +1,4 @@
 module.exports = {
-    "tviso": { // from http://developers.tviso.com
-        "app" : 36201,
-        "secret" : "64BSYBIUHFDNdsgbeyr",
-    },
     "themoviedb": { // from https://www.themoviedb.org/settings/api/new
         "key": "204cae4y56y565uu3e16a746",
         "mainLanguage": "es-ES", // it will search titles on that language and if has no matches, will retry with fallback
