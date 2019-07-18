@@ -5,7 +5,8 @@ Small panel to fix failed matches/watch the logs:
 
 # Media identifier
 
-Matches your movies/tvshows files against Tviso API and downloads their metadata+images+places them in a human readable format (plex like division between movies and series).
+Matches your movies/tvshows files against TheMovieDB API and downloads their metadata+images+places them in a human readable format (plex compatible).
+If a bigger size version of an existing media is received, it will replace the existing one.
 
 # Example
 
@@ -40,25 +41,27 @@ c:\failed_match
 
 # Requirements
 1. node >= v8
-2. Tviso API app (https://developers.tviso.com/)
+2. TheMovieDB API app (https://www.themoviedb.org/settings/api/new)
 
 # Setup
 
 0. Change your torrent downloader behaviour to move the finished downloads to a separate folder. So `media-identifier` won't move/work with unfinished downloads
 1. `git clone https://github.com/tetreum/media-identifier.git` or download the zip
 2. `npm install`
-3. `mv conf.demo.js conf.js`
+3. `cp conf.demo.js conf.js`
 4. Modify conf.js data
 5. `node index.js` (if i were you i would point its output somewhere as it maybe useful)
 
 # Usage
 
-Media identifier will automatically detect new files added to `directoryToParse` and will attempt to match them against tviso.
+Media identifier will automatically detect new files added to `directoryToParse` and will attempt to match them against the metadata provider.
 - Matched content will be moved to `destinationDirectory` you set on `conf.js`
 - If it fails to match any content, it will be moved to `failedMatchDirectory` folder, so you can rename the file for better matching & it's not checked on each `/parse` call
-- To fix failed matches/view logs `http://localhost:3000/`
-- To force a match, rename the file to its media `mediaType-idm`. Example: 2-2622.avi => Die Hard
+- To force a match, rename the file to its media `mediaType-idm`. Example: movie-2622.avi => Die Hard
 
+# Fix failed matches/view logs
+
+Visit `http://localhost:3000/`
 
 # API Methods
 

@@ -8,9 +8,9 @@ const rimraf = require('rimraf');
 require('perfect-print-js')
 
 const helper = require('./helper');
-const Tviso = require('./tviso');
+const Themoviedb = require('./themoviedb');
 const conf = require('./conf');
-const tviso = new Tviso(conf.tviso.app, conf.tviso.secret);
+const metadataProvider = new Themoviedb(conf.themoviedb);
 
 const mediaMatches = (media, file) => {
     let val, mediaName, mediaOriginalName;
@@ -28,7 +28,7 @@ const mediaMatches = (media, file) => {
         switch (attr) {
             case "title":
                 // Movies like Die Hard: With a Vengeance have invalid chars in their name
-                // As our files cant have them we also remove them from tviso data or it wont match. Ex:
+                // As our files cant have them we also remove them from metadata provider or it wont match. Ex:
                 // file:  Die Hard With a Vengeance.avi => Die Hard With a Vengeance
                 // tviso: Die Hard: With a Vengeance
                 // This will result in a failed match because of the :
@@ -54,7 +54,7 @@ const mediaMatches = (media, file) => {
 }
 
 const isTvshow = (media) => {
-    return [1, 4, 5].indexOf(media.mediaType) !== -1
+    return ["tv", "serie", "series", "episode"].indexOf(media.media_type) !== -1;
 }
 
 const cleanFolder = (baseFolder) => {
@@ -84,7 +84,7 @@ const moveToFailedDirectory = (filePath, file, directoryToParse, failedMatchDire
     if (typeof search !== "undefined") {
         message +=  " (" + search.results.length + ") " + JSON.stringify(search.results[0]);
     } else {
-        message += " - Could not match against tviso";
+        message += " - Could not match against metadata provider";
     }
 
     helper.log("red",  message);
@@ -98,6 +98,50 @@ const moveToFailedDirectory = (filePath, file, directoryToParse, failedMatchDire
 const parseDirectory = async (directoryToParse) => {
 	await parseFiles(directoryToParse, helper.getAllFiles(directoryToParse));
 	await cleanFolder(directoryToParse);
+}
+
+const getMediaFilePath = (media) => {
+    return path.join(conf.destinationDirectory, getMediaTypeFolder(media), media.folderName, media.fileName);
+}
+
+const generateFileName = (media, file) => {
+    if (isTvshow(media)) {
+        fileName = file.parsed.season + "x" + file.parsed.episode; // 1x01
+    } else {
+        fileName = generateFolderName(media, file);
+    }
+    fileName += file.ext;
+
+    if (isInvalidPath(fileName, {file: true})) {
+        fileName = file.base; // set the original name
+    }
+
+    return fileName;
+}
+
+const generateFolderName = (media, file) => {
+    let folderName;
+
+    // try to set a readable folder name, on error set the existing one
+    folderName = helper.removeInvalidPathCharacters(media.name);
+
+    if (isInvalidPath(folderName)) {
+        folderName = helper.removeInvalidPathCharacters(file.name);
+    }
+
+    // tvshow episodes share parent folder
+    if ((!isTvshow(media) && fs.existsSync(path.join(conf.destinationDirectory, folderName))) || isInvalidPath(folderName)) {
+        folderName = media.id  + "-" + media.media_type;
+    }
+
+    return folderName;
+}
+
+const getMediaTypeFolder = (media) => {
+    if (isTvshow(media)) {
+        return "series";
+    }
+    return "movies";
 }
 
 const parseFiles = async (directoryToParse, files = []) => {
@@ -120,6 +164,7 @@ const parseFiles = async (directoryToParse, files = []) => {
         fileName,
         folderPath,
         query,
+        currentMediaFilePath,
         dbPath = path.join(conf.destinationDirectory, './medias.db');
 
     if (!fs.existsSync(dbPath)) {
@@ -151,7 +196,6 @@ const parseFiles = async (directoryToParse, files = []) => {
             } catch (e) {
                 helper.log("red", "Could not remove " + files[k] + " : " + e.message);
             }
-
 
             // if folder is now empty, just delete it
             if (path.parse(file.dir).name != path.parse(directoryToParse).name && helper.getAllFiles(file.dir).length == 0 && file.dir.length > 5) { // avoid removing c:\\
@@ -204,10 +248,10 @@ const parseFiles = async (directoryToParse, files = []) => {
                 continue;
             }
 
-            helper.log("normal", "Matching against Tviso " + file.parsed.title);
-            search = await tviso.search(file.parsed.title);
+            helper.log("normal", "Matching against metadata provider " + file.parsed.title);
+            search = await metadataProvider.search(file.parsed.title);
 
-            if (search.error > 0 || search.results.length < 1) {
+            if (typeof search.status_code != "undefined" || search.results.length < 1) {
                 moveToFailedDirectory(files[k], file, directoryToParse, conf.failedMatchDirectory);
                 continue;
             }
@@ -223,44 +267,54 @@ const parseFiles = async (directoryToParse, files = []) => {
             }
 
             hasMatched = true;
-            helper.log("green", "Got a match: " +  file.parsed.title + " <--> " +  media.name + " - (" + media.idm + "-" + media.mediaType + ")");
+            helper.log("green", "Got a match: " +  file.parsed.title + " <--> " +  media.name + " - (" + media.id + "-" + media.media_type + ")");
 
+            // check if media is already present
             if (!isTvshow(media)) {
-                query = await db.get("SELECT * FROM medias WHERE idm = ? AND mediaType = ?", media.idm, media.mediaType);
+                query = await db.get("SELECT * FROM medias WHERE idm = ? AND mediaType = ?", media.id, media.media_type);
 
                 if (typeof query !== "undefined") {
-                    helper.log("red", "Skipping " + file.name + " (" + media.name + " - " + media.idm + " " + media.mediaType + ") - Media already present in db :S");
+                    currentMediaFilePath = getMediaFilePath(query);
+
+                    // maybe its a better quality version
+                    if (fs.statSync(currentMediaFilePath).size >= fs.statSync(files[k]).size) {
+                        helper.log("red", "Skipping " + file.name + " (" + media.name + " - " + media.id + " " + media.media_type + ") - Media already present in db :S");
+                        break;
+                    }
+
+                    helper.log("blue", "Media " + media.name + " is already present in db but new file (" + file.base + ") seems to have better quality.");
+
+                    media.fileName = generateFileName(media, file);
+                    media.folderName = query.folderName;
+
+                    fs.renameSync(files[k], getMediaFilePath(media));
+
+                    try {
+                        query = await db.run("UPDATE medias SET fileName = :fileName WHERE idm = :idm AND mediaType = :mediaType", {
+                            ':fileName': media.fileName,
+                            ':mediaType': query.mediaType,
+                            ':idm': query.idm,
+                        });
+
+                        // old  file will only be deleted if update succeed
+                        if (query.stmt.changes > 0) {
+                            fs.unlinkSync(currentMediaFilePath);
+                        } else {
+                            throw "no changes were made";
+                        }
+                    } catch (e) {
+                        helper.log("red", "Update failed: " + e);
+                    }
+
                     break;
                 }
             }
 
-            // try to set a readable folder name, on error set the existing one
-            folderName = helper.removeInvalidPathCharacters(media.name);
+            folderName = generateFolderName(media, file);
+            mediaTypeFolder = getMediaTypeFolder(media);
+            media.fileName = generateFileName(media, file);
 
-            if (isInvalidPath(folderName)) {
-                folderName = helper.removeInvalidPathCharacters(file.name);
-            }
-
-            // tvshow episodes share parent folder
-            if ((!isTvshow(media) && fs.existsSync(path.join(conf.destinationDirectory, folderName))) || isInvalidPath(folderName)) {
-                folderName = media.idm  + "-" + media.mediaType;
-            }
-
-            if (isTvshow(media)) {
-                fileName = file.parsed.season + "x" + file.parsed.episode; // 1x01
-				mediaTypeFolder = "series";
-            } else {
-                fileName = folderName;
-				mediaTypeFolder = "movies";
-            }
-            fileName += file.ext;
-
-            if (isInvalidPath(fileName, {file: true})) {
-                fileName = file.base; // set the original name
-            }
-            media.fileName = fileName;
-
-            // comes from a folder, they may be .srt files or other important data that should also be moved
+            // comes from a folder, there may be .srt files or other important data that should also be moved
             if (file.dir != conf.directoryToParse) {
                 // @ToDo scan folder looking for media related files
             }
@@ -269,11 +323,11 @@ const parseFiles = async (directoryToParse, files = []) => {
 
             // folderPath may exists for tvshows, there is no need to redownload episode's parent media
             if (!fs.existsSync(folderPath)) {
-                helper.log("blue", "Downloading tviso metadata");
+                helper.log("blue", "Downloading metadata");
                 fs.mkdirSync(folderPath);
 
-                await helper.downloadFile(media.artwork.backdrops.large, path.join(folderPath, "backdrop.jpg"));
-                await helper.downloadFile(media.artwork.posters.large, path.join(folderPath, "poster.jpg"));
+                await helper.downloadFile(media.backdrop_path, path.join(folderPath, "backdrop.jpg"));
+                await helper.downloadFile(media.poster_path, path.join(folderPath, "poster.jpg"));
 
                 fs.writeFileSync(path.join(folderPath, "media.json"), JSON.stringify(media));
             }
@@ -296,8 +350,8 @@ const parseFiles = async (directoryToParse, files = []) => {
 
             try {
                 query = await db.run("INSERT INTO medias (idm, mediaType, folderName, fileName, name, year, added, json) VALUES (:idm, :mediaType, :folderName, :fileName, :name, :year, :added, :json)", {
-                    ':idm' : media.idm,
-                    ':mediaType' : media.mediaType,
+                    ':idm' : media.id,
+                    ':mediaType' : media.media_type,
                     ':folderName' : folderName,
                     ':fileName' : fileName,
                     ':name' : media.name,
@@ -305,7 +359,9 @@ const parseFiles = async (directoryToParse, files = []) => {
                     ':added' : new Date().getTime(),
                     ':json' : JSON.stringify(media)
                 });
-            } catch (e) {}
+            } catch (e) {
+                helper.log("red", "Insert failed " + e.message);
+            }
             break;
         }
         if (!hasMatched) {
