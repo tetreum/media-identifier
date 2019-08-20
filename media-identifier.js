@@ -341,10 +341,10 @@ const parseFiles = async (directoryToParse, files = []) => {
                  } catch (e) {}
             }
 
-            helper.log("blue", "Moving " + file.base + " to " + path.join(folderPath, fileName) + " (may take a while for larger ones)");
+            helper.log("blue", "Moving " + file.base + " to " + path.join(folderPath, media.fileName) + " (may take a while for larger ones)");
 
             // move the media file
-            fs.renameSync(files[k], path.join(folderPath, fileName));
+            fs.renameSync(files[k], path.join(folderPath, media.fileName));
 
             helper.log("green", "Moved");
 
@@ -353,7 +353,7 @@ const parseFiles = async (directoryToParse, files = []) => {
                     ':idm' : media.id,
                     ':mediaType' : media.media_type,
                     ':folderName' : folderName,
-                    ':fileName' : fileName,
+                    ':fileName' : media.fileName,
                     ':name' : media.name,
                     ':year' : media.year,
                     ':added' : new Date().getTime(),
