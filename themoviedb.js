@@ -10,17 +10,12 @@ class TheMovieDB {
         this.BASE_URL = 'api.themoviedb.org';
     }
 
-    getMedia (idm, mediaType, fullInfo) {
-        if (typeof fullInfo === "undefined" || fullInfo == null || fullInfo == false) {
-            fullInfo = "basic";
-        } else {
-            fullInfo = "full";
-        }
-
-        return this.query("media/" + fullInfo + "_info", {
-            'idm': idm,
-            'mediaType': mediaType,
-        }, this.METHOD_GET);
+    getMedia (idm, mediaType) {
+        return new Promise((resolve, reject) => {
+            this.query(mediaType + "/" + idm).then((response) => {
+				resolve(this.standarizeMediaOutput(response));
+			});
+		});
     }
 
     search (q, lang) {
