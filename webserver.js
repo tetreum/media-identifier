@@ -116,6 +116,8 @@ const start = () => {
 			if (newPath != false) {
 				await mediaIdentifier.parseFiles(conf.failedMatchDirectory, [newPath]);
 			}
+              
+            await mediaIdentifier.cleanFolder(conf.failedMatchDirectory);
 
 	        reply(res, "working on that");
 	      break;
