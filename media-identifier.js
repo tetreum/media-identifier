@@ -158,9 +158,9 @@ const parseFiles = async (directoryToParse, files = []) => {
         media,
         search,
         folderName,
-		mediaTypeFolder,
-		seriesFolder = path.join(conf.destinationDirectory, "series"),
-		moviesFolder = path.join(conf.destinationDirectory, "movies"),
+        mediaTypeFolder,
+        seriesFolder = path.join(conf.destinationDirectory, "series"),
+        moviesFolder = path.join(conf.destinationDirectory, "movies"),
         fileName,
         folderPath,
         query,
@@ -168,16 +168,16 @@ const parseFiles = async (directoryToParse, files = []) => {
         dbPath = path.join(conf.destinationDirectory, './medias.db');
 
     if (!fs.existsSync(dbPath)) {
-		helper.log("blue", "media.db not found, creating");
+        helper.log("blue", "media.db not found, creating");
         fs.copyFileSync('./medias.db', dbPath);
     }
 
-	if (!fs.existsSync(seriesFolder)) {
-		fs.mkdirSync(seriesFolder);
-	}
-	if (!fs.existsSync(moviesFolder)) {
-		fs.mkdirSync(moviesFolder);
-	}
+    if (!fs.existsSync(seriesFolder)) {
+        fs.mkdirSync(seriesFolder);
+    }
+    if (!fs.existsSync(moviesFolder)) {
+        fs.mkdirSync(moviesFolder);
+    }
 
     const db = await sqlite.open(dbPath, { Promise });
 
@@ -211,12 +211,12 @@ const parseFiles = async (directoryToParse, files = []) => {
 
         helper.log("normal", "Parsing " + file.base);
 
-        // detect forced matches aka 2-2622.avi => Die Hard
-        if (file.name.substr(1, 1) == "-" && (matchRes = file.base.match(/([1-4]{1})\-([0-9]{1,20})\./i))) {
+        // detect forced matches aka movie-562.avi => Die Hard
+        if (file.name.substr(5, 1) == "-" && (matchRes = file.base.match(/(movie)\-([0-9]{1,20})\./i))) {
             helper.log("normal", "Forced match detected");
             isForcedMatch = true;
 
-            if (parseInt(matchRes[1]) != 2) {
+            if (matchRes[1] != "movie") {
               helper.log("red", "Forced match is only available for movies");
               pd("-exit-");
             }
@@ -224,7 +224,7 @@ const parseFiles = async (directoryToParse, files = []) => {
             // replicate search output to not change the incoming code
             search = {
               results: [
-                await tviso.getMedia(parseInt(matchRes[2]), parseInt(matchRes[1]))
+                await metadataProvider.getMedia(parseInt(matchRes[2]), matchRes[1])
               ]
             };
 
