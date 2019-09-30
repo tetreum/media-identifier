@@ -13,9 +13,10 @@ class TheMovieDB {
     getMedia (idm, mediaType) {
         return new Promise((resolve, reject) => {
             this.query(mediaType + "/" + idm).then((response) => {
-				resolve(this.standarizeMediaOutput(response));
-			});
-		});
+                response.mediaType = mediaType;
+                resolve(this.standarizeMediaOutput(response));
+            });
+        });
     }
 
     search (q, lang) {
